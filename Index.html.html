@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Oncogene Atlas</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    :root {
+      --bg: #0d0d0d;
+      --text: #e0e0e0;
+      --text-strong: #ffffff;
+      --text-dim: #888;
+      --text-dim-2: #777;
+      --text-muted: #999;
+      --text-body: #bbb;
+      --text-body-2: #ccc;
+      --text-body-3: #ddd;
+      --panel: #141414;
+      --panel-2: #161616;
+      --border: #262626;
+      --border-strong: #333;
+      --border-stronger: #444;
+      --border-hover: #3a3a3a;
+      --accent: #ff6b5b;
+      --accent-text: #ff8a80;
+      --mut: #d94f3d;
+      --node-off-bg: #0d0d0d;
+      --node-off-border: #444;
+      --node-off-text: #777;
+      --node-line: #333;
+      --crispr-bg: #0d0d0d;
+      --crispr-text: #7ec97e;
+      --shadow: none;
+    }
+    [data-theme="light"] {
+      --bg: #f6f5f3;
+      --text: #26221f;
+      --text-strong: #17140f;
+      --text-dim: #7a736c;
+      --text-dim-2: #8a827a;
+      --text-muted: #6e675f;
+      --text-body: #4a443e;
+      --text-body-2: #3d3833;
+      --text-body-3: #2f2b27;
+      --panel: #ffffff;
+      --panel-2: #fbfaf8;
+      --border: #e5e1da;
+      --border-strong: #d9d4cb;
+      --border-stronger: #c9c3b8;
+      --border-hover: #b8b1a4;
+      --accent: #d9483a;
+      --accent-text: #b8402f;
+      --mut: #d9483a;
+      --node-off-bg: #ffffff;
+      --node-off-border: #cfc9bf;
+      --node-off-text: #8a827a;
+      --node-line: #e0dbd2;
+      --crispr-bg: #f0eee9;
+      --crispr-text: #3f7d3f;
+      --shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    body {
+      font-family: -apple-system, Arial, sans-serif;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 24px;
+      background-color: var(--bg);
+      color: var(--text);
+      transition: background-color 0.15s ease, color 0.15s ease;
+    }
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    h1 {
+      margin: 0 0 4px 0;
+      color: var(--text-strong);
+      font-size: 28px;
+    }
+    .subtitle {
+      color: var(--text-dim);
+      font-size: 13px;
+      margin: 0;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .count-badge {
+      border: 1px solid var(--border-stronger);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 13px;
+      color: var(--text-body-2);
+      white-space: nowrap;
+    }
+    .count-badge b {
+      color: var(--accent-text);
+    }
+    .theme-toggle {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 1px solid var(--border-stronger);
+      background: var(--panel-2);
+      color: var(--text-body-2);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      padding: 0;
+    }
+    .theme-toggle:hover {
+      border-color: var(--border-hover);
+    }
+    .theme-toggle svg {
+      width: 17px;
+      height: 17px;
+    }
+    .theme-toggle .icon-sun { display: none; }
+    .theme-toggle .icon-moon { display: block; }
+    [data-theme="light"] .theme-toggle .icon-sun { display: block; }
+    [data-theme="light"] .theme-toggle .icon-moon { display: none; }
+    .search-row {
+      display: flex;
+      gap: 10px;
+      margin: 20px 0 14px 0;
+      align-items: stretch;
+    }
+    #search {
+      width: 100%;
+      font-size: 15px;
+      padding: 12px 14px;
+      margin: 0;
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      background: var(--panel-2);
+      color: var(--text);
+    }
+    .copy-link-btn {
+      font-size: 13px;
+      padding: 0 16px;
+      border: 1px solid var(--border-stronger);
+      border-radius: 8px;
+      background: var(--panel-2);
+      color: var(--text-body-2);
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .copy-link-btn:hover {
+      border-color: var(--border-hover);
+    }
+    .copy-link-btn.copied {
+      border-color: var(--accent);
+      color: var(--accent-text);
+    }
+    .pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .pill {
+      font-size: 13px;
+      padding: 6px 14px;
+      border: 1px solid var(--border-stronger);
+      border-radius: 20px;
+      background: var(--panel-2);
+      color: var(--text-body-2);
+      cursor: pointer;
+    }
+    .pill:hover {
+      background: var(--panel);
+      border-color: var(--border-hover);
+    }
+    .pill.active {
+      border-color: var(--accent);
+      color: var(--accent-text);
+    }
+    #result-count {
+      font-size: 13px;
+      color: var(--text-dim-2);
+      margin-bottom: 10px;
+    }
+    .legend {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+      font-size: 11px;
+      color: var(--text-dim);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 14px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+    }
+    .legend-dot.a { background: #4caf50; }
+    .legend-dot.t { background: #ef5350; }
+    .legend-dot.g { background: #ffca28; }
+    .legend-dot.c { background: #42a5f5; }
+    .legend-dot.mut { background: var(--mut); }
+    .concept-section {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 18px;
+      overflow: hidden;
+    }
+    .concept-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      cursor: pointer;
+    }
+    .concept-header:hover {
+      background: var(--panel-2);
+    }
+    .concept-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .concept-title {
+      font-size: 15px;
+      font-weight: bold;
+      color: var(--text-strong);
+    }
+    .concept-tag {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-dim);
+      border: 1px solid var(--border-strong);
+      border-radius: 20px;
+      padding: 2px 9px;
+    }
+    .concept-chevron {
+      color: var(--text-dim);
+      font-size: 13px;
+      transition: transform 0.15s ease;
+    }
+    .concept-section.open .concept-chevron {
+      transform: rotate(90deg);
+    }
+    .concept-body {
+      display: none;
+      padding: 0 18px 18px 18px;
+      border-top: 1px solid var(--border);
+    }
+    .concept-section.open .concept-body {
+      display: block;
+    }
+    .concept-intro {
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text-body);
+      margin: 14px 0 16px 0;
+    }
+    .concept-visual {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .concept-steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .concept-step {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+    .concept-step .detail-label {
+      margin-bottom: 6px;
+    }
+    .concept-step p {
+      margin: 0;
+      font-size: 12.5px;
+      line-height: 1.5;
+      color: var(--text-body-2);
+    }
+    @media (max-width: 700px) {
+      .concept-steps {
+        grid-template-columns: 1fr;
+      }
+    }
+    .basics-section {
+      border-color: var(--border-strong);
+    }
+    .basics-section .concept-header {
+      padding: 16px 18px;
+    }
+    .basics-section .concept-title {
+      font-size: 16px;
+    }
+    .basics-section .concept-tag {
+      border-color: var(--accent);
+      color: var(--accent-text);
+    }
+    .basics-subhead {
+      font-size: 13px;
+      color: var(--text-dim);
+      margin: -2px 0 16px 0;
+    }
+    .basics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .basics-card {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .basics-card-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .basics-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      background: var(--panel);
+      border: 1px solid var(--border-strong);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 14px;
+    }
+    .basics-card-title {
+      font-size: 13.5px;
+      font-weight: bold;
+      color: var(--text-strong);
+    }
+    .basics-card p {
+      margin: 0;
+      font-size: 12.5px;
+      line-height: 1.55;
+      color: var(--text-body-2);
+    }
+    .basics-example {
+      font-family: "Courier New", monospace;
+      font-size: 12px;
+      background: var(--crispr-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 9px;
+      margin-top: 8px;
+      display: inline-block;
+      color: var(--text-body-2);
+    }
+    .basics-howto {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+    .basics-howto ul {
+      margin: 6px 0 0 0;
+      padding-left: 18px;
+    }
+    .basics-howto li {
+      font-size: 12.5px;
+      line-height: 1.7;
+      color: var(--text-body-2);
+    }
+    @media (max-width: 700px) {
+      .basics-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .gene-row {
+      background-color: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 18px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+    }
+    .category-section {
+      margin-bottom: 22px;
+    }
+    .category-header {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      padding: 4px 2px 10px 2px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+    .category-title {
+      font-size: 14px;
+      font-weight: bold;
+      color: var(--text-strong);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .category-count {
+      font-size: 12px;
+      color: var(--text-dim-2);
+    }
+    .gene-row:hover {
+      border-color: var(--border-hover);
+    }
+    .row-top {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .sequence {
+      font-family: "Courier New", monospace;
+      font-size: 16px;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      min-width: 180px;
+    }
+    .sequence .base-a { color: #4caf50; }
+    .sequence .base-t { color: #ef5350; }
+    .sequence .base-g { color: #ffca28; }
+    .sequence .base-c { color: #42a5f5; }
+    .sequence .mut {
+      background: var(--mut);
+      color: white;
+      border-radius: 3px;
+      padding: 0 2px;
+    }
+    .gene-id {
+      min-width: 140px;
+    }
+    .gene-name {
+      font-size: 17px;
+      font-weight: bold;
+      color: var(--text-strong);
+    }
+    .gene-variant {
+      font-size: 12px;
+      color: var(--accent-text);
+    }
+    .gene-position {
+      font-size: 12px;
+      color: var(--text-dim-2);
+    }
+    .cancer-tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-left: auto;
+    }
+    .cancer-tag {
+      font-size: 11px;
+      border: 1px solid var(--border-stronger);
+      border-radius: 10px;
+      padding: 2px 8px;
+      color: var(--text-body);
+      white-space: nowrap;
+    }
+    .gene-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      display: none;
+    }
+    .gene-desc > p {
+      margin: 0 0 14px 0;
+      line-height: 1.5;
+      color: var(--text-body);
+    }
+    .meta-badges {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .meta-badge {
+      font-size: 11px;
+      color: var(--text-dim);
+      border: 1px solid var(--border-strong);
+      border-radius: 20px;
+      padding: 3px 10px;
+    }
+    .visual-box {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .visual-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .visual-caption {
+      font-size: 11px;
+      color: var(--text-dim);
+      text-align: center;
+      max-width: 110px;
+    }
+    .visual-caption.after {
+      color: var(--accent-text);
+    }
+    .visual-arrow {
+      font-size: 20px;
+      color: var(--border-stronger);
+    }
+    .short-box {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+    .pathway-nodes {
+      display: flex;
+      align-items: center;
+    }
+    .node {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 2px solid var(--node-off-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: var(--node-off-text);
+      background: var(--node-off-bg);
+    }
+    .node.active {
+      border-color: var(--mut);
+      background: var(--mut);
+      color: white;
+    }
+    .node-line {
+      width: 20px;
+      height: 2px;
+      background: var(--node-line);
+    }
+    .node-caption {
+      font-size: 9px;
+      color: var(--text-dim);
+      width: 60px;
+      text-align: center;
+      margin-top: 4px;
+    }
+    .node-caption.active {
+      color: var(--accent-text);
+    }
+    .node-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .short-text .detail-label {
+      color: var(--accent-text);
+      margin-bottom: 6px;
+    }
+    .short-text p {
+      margin: 0;
+      line-height: 1.5;
+      font-size: 14px;
+      color: var(--text-body-3);
+    }
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .detail-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+    .explain-text p {
+      margin: 0;
+      line-height: 1.6;
+      font-size: 13px;
+      color: var(--text-body-2);
+    }
+    .crispr-box {
+      background: var(--crispr-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      font-family: "Courier New", monospace;
+      font-size: 12.5px;
+      line-height: 1.6;
+      color: var(--crispr-text);
+    }
+    @media (max-width: 700px) {
+      .two-col {
+        grid-template-columns: 1fr;
+      }
+      .short-box {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header-row">
+    <div>
+      <h1>Oncogene Atlas</h1>
+      <p class="subtitle">hotspot mutations · targetable by PCR & CRISPR</p>
+    </div>
+    <div class="header-right">
+      <div class="count-badge"><b id="count-number">11</b> entries shown</div>
+      <button class="theme-toggle" id="theme-toggle" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+        </svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="concept-section basics-section" id="basics-section">
+    <div class="concept-header" id="basics-header">
+      <div class="concept-title-wrap">
+        <span class="concept-title">New to genes and mutations?</span>
+        <span class="concept-tag">Start here</span>
+      </div>
+      <span class="concept-chevron">▶</span>
+    </div>
+    <div class="concept-body">
+      <p class="basics-subhead">A quick primer before you dive into the atlas below — no biology background needed.</p>
+
+      <div class="basics-grid">
+        <div class="basics-card">
+          <div class="basics-card-head">
+            <div class="basics-icon">🧬</div>
+            <div class="basics-card-title">What's a gene?</div>
+          </div>
+          <p>A gene is a short stretch of DNA that acts like an instruction for building one
+          specific protein. Proteins are the working parts of a cell — some send signals,
+          some repair damage, some control when a cell divides.</p>
+        </div>
+
+        <div class="basics-card">
+          <div class="basics-card-head">
+            <div class="basics-icon">🔤</div>
+            <div class="basics-card-title">What are the letters?</div>
+          </div>
+          <p>DNA is written using just 4 "letters" — A, T, G, C — each standing for a different
+          molecule (adenine, thymine, guanine, cytosine). The order they're strung in is what
+          encodes the instructions.</p>
+          <div class="basics-example">A T G C T A ...</div>
+        </div>
+
+        <div class="basics-card">
+          <div class="basics-card-head">
+            <div class="basics-icon">⚠️</div>
+            <div class="basics-card-title">What's a mutation?</div>
+          </div>
+          <p>A mutation is just a typo in that sequence — one letter swapped for another. Most
+          are harmless. But if a typo lands in exactly the wrong spot, it can change the
+          protein enough to break how the cell behaves.</p>
+        </div>
+
+        <div class="basics-card">
+          <div class="basics-card-head">
+            <div class="basics-icon">⚖️</div>
+            <div class="basics-card-title">Oncogene vs. tumor suppressor</div>
+          </div>
+          <p>Think of a cell like a car. Oncogenes are like the gas pedal — a mutation can jam
+          it down, so the cell divides nonstop. Tumor suppressors are like the brakes — a
+          mutation can disable them, so nothing stops runaway growth.</p>
+        </div>
+      </div>
+
+      <div class="basics-howto">
+        <div class="detail-label">How to read this atlas</div>
+        <ul>
+          <li>Each colored letter in a sequence is a DNA base — check the legend below for the color key</li>
+          <li>The one highlighted in solid red is the actual mutated position</li>
+          <li>Click any gene row to expand it and see the pathway it affects, a plain-language
+          explanation, and how it could be targeted with CRISPR</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="search-row">
+    <input type="text" id="search" placeholder="search gene, mutation, or cancer type... ( / )">
+    <button id="copy-link" class="copy-link-btn" title="Copy link to this view">Copy link</button>
+  </div>
+
+  <div class="pills" id="pills"></div>
+  <div id="result-count"></div>
+
+  <div class="legend">
+    <div class="legend-item"><span class="legend-dot a"></span> A adenine</div>
+    <div class="legend-item"><span class="legend-dot t"></span> T thymine</div>
+    <div class="legend-item"><span class="legend-dot g"></span> G guanine</div>
+    <div class="legend-item"><span class="legend-dot c"></span> C cytosine</div>
+    <div class="legend-item"><span class="legend-dot mut"></span> highlighted = the mutated base</div>
+  </div>
+
+  <div class="concept-section" id="apoptosis-section">
+    <div class="concept-header" id="apoptosis-header">
+      <div class="concept-title-wrap">
+        <span class="concept-title">Apoptosis Evasion</span>
+        <span class="concept-tag">Hallmark of cancer</span>
+      </div>
+      <span class="concept-chevron">▶</span>
+    </div>
+    <div class="concept-body">
+      <p class="concept-intro">
+        Normal cells are built to kill themselves when something goes wrong — DNA damage,
+        a missing growth signal, a failed division. This built-in self-destruct program is
+        called <b>apoptosis</b>. Cancer cells survive by disabling it, letting damaged cells
+        that should have died keep dividing instead.
+      </p>
+
+      <div class="concept-visual">
+        <div class="visual-state">
+          <svg width="80" height="80" viewBox="0 0 80 80">
+            <circle cx="40" cy="40" r="28" fill="none" stroke="#4caf50" stroke-width="4"/>
+            <path d="M28 32 L36 40 L28 48 M52 32 L44 40 L52 48" stroke="#4caf50" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+            <circle cx="40" cy="40" r="4" fill="#4caf50"/>
+          </svg>
+          <div class="visual-caption">Damaged cell detects the problem, triggers apoptosis</div>
+        </div>
+        <div class="visual-arrow">→</div>
+        <div class="visual-state">
+          <svg width="80" height="80" viewBox="0 0 80 80">
+            <circle cx="40" cy="40" r="28" fill="none" stroke="#666" stroke-width="4" stroke-dasharray="7 5"/>
+            <path d="M25 40 H55" stroke="#d94f3d" stroke-width="4" stroke-linecap="round"/>
+            <path d="M45 34 L55 40 L45 46" stroke="#d94f3d" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+          <div class="visual-caption after">Cancer cell blocks the death signal, keeps dividing</div>
+        </div>
+      </div>
+
+      <div class="concept-steps">
+        <div class="concept-step">
+          <div class="detail-label">Normally</div>
+          <p>Stress or DNA damage activates p53, which switches on pro-death signals (like BAX)
+          that punch holes in the mitochondria, releasing cytochrome c and triggering caspases
+          that dismantle the cell.</p>
+        </div>
+        <div class="concept-step">
+          <div class="detail-label">How cancer evades it</div>
+          <p>Tumor suppressors like TP53 get mutated and stop working, or anti-apoptotic proteins
+          like BCL-2 are overproduced and physically block the death signal from ever reaching
+          the mitochondria.</p>
+        </div>
+        <div class="concept-step">
+          <div class="detail-label">Why it matters for treatment</div>
+          <p>Many cancer drugs (including some CRISPR and small-molecule strategies) work by
+          forcing this pathway back open — restoring apoptosis rather than just stopping growth.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="card-container"></div>
+
+  <script>
+    const THEME_KEY = "atlas-theme";
+    const themeToggleBtn = document.getElementById("theme-toggle");
+
+    function setTheme(theme) {
+      document.documentElement.setAttribute("data-theme", theme);
+      localStorage.setItem(THEME_KEY, theme);
+    }
+
+    (function initTheme() {
+      const saved = localStorage.getItem(THEME_KEY);
+      setTheme(saved === "light" ? "light" : "dark");
+    })();
+
+    themeToggleBtn.addEventListener("click", function() {
+      const current = document.documentElement.getAttribute("data-theme");
+      setTheme(current === "dark" ? "light" : "dark");
+    });
+
+    let genes = [];
+    let activeCancer = "All";
+    const container = document.getElementById("card-container");
+    const countNumber = document.getElementById("count-number");
+
+    function highlightSequence(gene) {
+      const baseClass = { A: "base-a", T: "base-t", G: "base-g", C: "base-c" };
+      const chars = gene.sequence.split("");
+      return chars.map(function(letter, i) {
+        const isMutated = i === gene.mutatedIndex;
+        const cls = isMutated ? "mut" : baseClass[letter];
+        return `<span class="${cls}">${letter}</span>`;
+      }).join("");
+    }
+
+    function buildProteinVisual(gene) {
+      const isOncogene = gene.mutationType === "Oncogene";
+
+      const beforeSvg = isOncogene
+        ? `<svg width="70" height="70" viewBox="0 0 70 70">
+             <circle cx="35" cy="35" r="26" fill="none" stroke="#555" stroke-width="4"/>
+             <circle cx="35" cy="35" r="6" fill="#555"/>
+           </svg>`
+        : `<svg width="70" height="70" viewBox="0 0 70 70">
+             <path d="M35 10 L58 20 V38 C58 52 47 60 35 63 C23 60 12 52 12 38 V20 Z" fill="none" stroke="#4caf50" stroke-width="4"/>
+             <path d="M25 34 L32 41 L46 27" fill="none" stroke="#4caf50" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+           </svg>`;
+
+      const afterSvg = isOncogene
+        ? `<svg width="70" height="70" viewBox="0 0 70 70">
+             <circle cx="35" cy="35" r="26" fill="none" stroke="#d94f3d" stroke-width="4"/>
+             <circle cx="35" cy="35" r="6" fill="#d94f3d"/>
+             <path d="M35 9 V2 M52 18 L57 13 M18 18 L13 13 M35 61 V68 M52 52 L57 57 M18 52 L13 57" stroke="#d94f3d" stroke-width="3" stroke-linecap="round"/>
+           </svg>`
+        : `<svg width="70" height="70" viewBox="0 0 70 70">
+             <path d="M35 10 L58 20 V38 C58 52 47 60 35 63 C23 60 12 52 12 38 V20 Z" fill="none" stroke="#666" stroke-width="4" stroke-dasharray="6 5"/>
+             <path d="M25 30 L45 42 M45 30 L25 42" fill="none" stroke="#d94f3d" stroke-width="4" stroke-linecap="round"/>
+           </svg>`;
+
+      const beforeLabel = isOncogene ? "Off — normal" : "Intact — repairs damage";
+      const afterLabel = isOncogene ? "Stuck on — always signaling" : "Broken — damage unchecked";
+
+      return `
+        <div class="visual-state">
+          ${beforeSvg}
+          <div class="visual-caption">${beforeLabel}</div>
+        </div>
+        <div class="visual-arrow">→</div>
+        <div class="visual-state">
+          ${afterSvg}
+          <div class="visual-caption after">${afterLabel}</div>
+        </div>
+      `;
+    }
+
+    function buildPathwayHtml(gene) {
+      return gene.pathway.map(function(step, i) {
+        const isActive = i === gene.pathwayActiveIndex;
+        const node = `<div class="node ${isActive ? 'active' : ''}">${isActive ? '●' : '○'}</div>`;
+        const line = i < gene.pathway.length - 1 ? `<div class="node-line"></div>` : "";
+        return `<div class="node-wrap">
+                  ${node}
+                  <div class="node-caption ${isActive ? 'active' : ''}">${step}</div>
+                </div>${line}`;
+      }).join("");
+    }
+
+    const categoryOrder = [
+      "Breast & Gynecologic Cancers",
+      "Lung & Thoracic Cancers",
+      "GI & Colorectal Cancers",
+      "Blood Cancers (Leukemia & Lymphoma)",
+      "Skin Cancer (Melanoma)",
+      "Sarcoma & Pediatric Cancers",
+      "Pan-Cancer / Multiple Types"
+    ];
+
+    function buildGeneRow(gene) {
+      const row = document.createElement("div");
+      row.className = "gene-row";
+
+      const tags = gene.associatedCancers.map(function(c) {
+        return `<span class="cancer-tag">${c}</span>`;
+      }).join("");
+
+      row.innerHTML = `
+        <div class="row-top">
+          <div class="sequence">${highlightSequence(gene)}</div>
+          <div class="gene-id">
+            <div class="gene-name">${gene.name}</div>
+            <div class="gene-variant">${gene.variant}</div>
+            <div class="gene-position">${gene.position}</div>
+          </div>
+          <div class="cancer-tags">${tags}</div>
+        </div>
+        <div class="gene-desc">
+          <p>${gene.desc}</p>
+          <div class="meta-badges">
+            <span class="meta-badge">refined · Aug 2026</span>
+          </div>
+          <div class="visual-box">
+            ${buildProteinVisual(gene)}
+          </div>
+          <div class="short-box">
+            <div class="pathway-nodes">${buildPathwayHtml(gene)}</div>
+            <div class="short-text">
+              <div class="detail-label">In short</div>
+              <p>${gene.analogy}</p>
+            </div>
+          </div>
+          <div class="two-col">
+            <div class="explain-text">
+              <div class="detail-label">What's happening</div>
+              <p>${gene.detailedExplanation}</p>
+            </div>
+            <div>
+              <div class="detail-label">Targeting this mutation</div>
+              <div class="crispr-box">${gene.crisprTargeting}</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      row.addEventListener("click", function() {
+        const desc = row.querySelector(".gene-desc");
+        desc.style.display = (desc.style.display === "none" || !desc.style.display) ? "block" : "none";
+      });
+
+      return row;
+    }
+
+    function renderCards(list) {
+      container.innerHTML = "";
+      document.getElementById("result-count").textContent =
+        list.length + (list.length === 1 ? " gene found" : " genes found");
+      countNumber.textContent = list.length;
+
+      if (list.length === 0) {
+        container.innerHTML = `<p style="color:var(--text-dim-2);">No genes match your search.</p>`;
+        return;
+      }
+
+      const byCategory = {};
+      list.forEach(function(gene) {
+        const cat = gene.category || "Other";
+        if (!byCategory[cat]) byCategory[cat] = [];
+        byCategory[cat].push(gene);
+      });
+
+      const orderedCategories = categoryOrder
+        .filter(function(cat) { return byCategory[cat]; })
+        .concat(Object.keys(byCategory).filter(function(cat) { return categoryOrder.indexOf(cat) === -1; }));
+
+      orderedCategories.forEach(function(cat) {
+        const genesInCat = byCategory[cat];
+
+        const section = document.createElement("div");
+        section.className = "category-section";
+
+        const header = document.createElement("div");
+        header.className = "category-header";
+        header.innerHTML = `
+          <span class="category-title">${cat}</span>
+          <span class="category-count">${genesInCat.length} gene${genesInCat.length === 1 ? "" : "s"}</span>
+        `;
+        section.appendChild(header);
+
+        genesInCat.forEach(function(gene) {
+          section.appendChild(buildGeneRow(gene));
+        });
+
+        container.appendChild(section);
+      });
+    }
+
+    function getAllCancerTypes() {
+      const set = new Set();
+      genes.forEach(function(gene) {
+        gene.associatedCancers.forEach(function(c) {
+          set.add(c);
+        });
+      });
+      return ["All"].concat(Array.from(set).sort());
+    }
+
+    function renderPills() {
+      const pillsContainer = document.getElementById("pills");
+      pillsContainer.innerHTML = "";
+      getAllCancerTypes().forEach(function(type) {
+        const pill = document.createElement("div");
+        pill.className = "pill" + (type === activeCancer ? " active" : "");
+        pill.textContent = type;
+        pill.addEventListener("click", function() {
+          activeCancer = type;
+          renderPills();
+          applyFilters();
+        });
+        pillsContainer.appendChild(pill);
+      });
+    }
+
+    function updateUrl() {
+      const params = new URLSearchParams();
+      if (searchBox.value.trim() !== "") params.set("search", searchBox.value);
+      if (activeCancer !== "All") params.set("type", activeCancer);
+      const query = params.toString();
+      const newUrl = window.location.pathname + (query ? "?" + query : "");
+      history.replaceState(null, "", newUrl);
+    }
+
+    function applyFilters() {
+      const query = searchBox.value.toLowerCase();
+
+      const result = genes.filter(function(gene) {
+        const cancerMatch = gene.associatedCancers.some(function(c) {
+          return c.toLowerCase().includes(query);
+        });
+        const textMatch =
+          gene.name.toLowerCase().includes(query) ||
+          gene.variant.toLowerCase().includes(query) ||
+          cancerMatch;
+        const pillMatch = (activeCancer === "All") || gene.associatedCancers.includes(activeCancer);
+        return textMatch && pillMatch;
+      });
+
+      updateUrl();
+      renderCards(result);
+    }
+
+    function applyUrlParams() {
+      const params = new URLSearchParams(window.location.search);
+      const searchParam = params.get("search");
+      const typeParam = params.get("type");
+      if (searchParam) searchBox.value = searchParam;
+      if (typeParam && getAllCancerTypes().includes(typeParam)) activeCancer = typeParam;
+    }
+
+    fetch("genes.json")
+      .then(response => response.json())
+      .then(data => {
+        genes = data;
+        renderPills();
+        applyUrlParams();
+        renderPills();
+        applyFilters();
+      });
+
+    const searchBox = document.getElementById("search");
+    searchBox.addEventListener("input", applyFilters);
+
+    const copyLinkBtn = document.getElementById("copy-link");
+    copyLinkBtn.addEventListener("click", function() {
+      navigator.clipboard.writeText(window.location.href).then(function() {
+        const original = copyLinkBtn.textContent;
+        copyLinkBtn.textContent = "Copied!";
+        copyLinkBtn.classList.add("copied");
+        setTimeout(function() {
+          copyLinkBtn.textContent = original;
+          copyLinkBtn.classList.remove("copied");
+        }, 1500);
+      });
+    });
+
+    document.getElementById("apoptosis-header").addEventListener("click", function() {
+      document.getElementById("apoptosis-section").classList.toggle("open");
+    });
+
+    document.getElementById("basics-header").addEventListener("click", function() {
+      document.getElementById("basics-section").classList.toggle("open");
+    });
+
+    document.addEventListener("keydown", function(e) {
+      if (e.key === "/" && document.activeElement !== searchBox) {
+        e.preventDefault();
+        searchBox.focus();
+      }
+    });
+  </script>
+</body>
+</html>
