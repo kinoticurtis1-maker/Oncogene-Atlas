@@ -1,0 +1,38 @@
+{
+  "project": "African Genomics Observatory",
+  "status": "interface scaffold; no research statistics populated",
+  "observation_schema": {
+    "id": "unique-observation-id",
+    "study": {
+      "title": "",
+      "year": null,
+      "doi_or_url": ""
+    },
+    "population": {
+      "country": "",
+      "region": "",
+      "population_or_cohort": "",
+      "sample_size": null
+    },
+    "data_type": "",
+    "cancer_context": {
+      "cancer_type": "",
+      "gene": "",
+      "alteration": ""
+    },
+    "evidence": {
+      "study_type": "",
+      "finding": "",
+      "limitations": ""
+    },
+    "accessed": ""
+  },
+  "planned_metrics": [
+    "African studies identified",
+    "countries represented",
+    "population/cohort groups represented",
+    "cancer-genomics studies",
+    "selected genes with African evidence",
+    "participant/cohort counts"
+  ]
+}
